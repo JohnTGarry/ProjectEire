@@ -2,6 +2,7 @@ using System;
 using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
+using UnityEngine.InputSystem;
 
 public class PlayerMovement : MonoBehaviour
 {
@@ -18,6 +19,7 @@ public class PlayerMovement : MonoBehaviour
 
     private bool isFacingRight = true;
     private float horizontalInput;
+    private float horizontal;
     private bool isJumpPressed = false;
     private bool isJumpReleased = true;
 
@@ -27,18 +29,6 @@ public class PlayerMovement : MonoBehaviour
     void Update() {
         if (isDashing) {
             return;
-        }
-
-        horizontalInput = Input.GetAxisRaw("Horizontal");
-        isJumpPressed = Input.GetButtonDown("Jump");
-        isJumpReleased = Input.GetButtonUp("Jump");
-
-        if (isJumpPressed && isGrounded()) {
-            rb.velocity = new Vector2(rb.velocity.x, jumpingPower);
-        }
-
-        if (isJumpReleased && rb.velocity.y > 0f) {
-            rb.velocity = new Vector2(rb.velocity.x, rb.velocity.y * 0.5f);
         }
 
         if (Input.GetKeyDown(KeyCode.LeftShift) && canDash) {
@@ -57,7 +47,21 @@ public class PlayerMovement : MonoBehaviour
     }
 
     private void MovePlayer() {
-        rb.velocity = new Vector2(horizontalInput * moveSpeed, rb.velocity.y);
+        rb.velocity = new Vector2(horizontal * moveSpeed, rb.velocity.y);
+    }
+
+    public void Move(InputAction.CallbackContext context) {
+        horizontal = context.ReadValue<Vector2>().x;
+    }
+
+    public void Jump(InputAction.CallbackContext context) {
+        if (context.performed && isGrounded()) {
+            rb.velocity = new Vector2(rb.velocity.x, jumpingPower);
+        }
+
+        if (context.canceled && rb.velocity.y > 0f) {
+            rb.velocity = new Vector2(rb.velocity.x, rb.velocity.y * 0.5f);
+        }
     }
 
     private void Flip() {
