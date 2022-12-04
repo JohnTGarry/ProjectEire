@@ -5,6 +5,7 @@ using UnityEngine.InputSystem;
 
 public class PlayerMovement : MonoBehaviour
 {
+    #region Serialize Fields
     [Header("Run")]
     [SerializeField] private float moveSpeed;
     [SerializeField] private float acceleration;
@@ -15,6 +16,7 @@ public class PlayerMovement : MonoBehaviour
     [Header("Jump")]
     [SerializeField] private float jumpingPower;
     [SerializeField] private float coyoteTime;
+    [SerializeField] private float jumpBufferTime;
 
     [Header("Dash")]
     [SerializeField] private float dashingPower;
@@ -26,7 +28,9 @@ public class PlayerMovement : MonoBehaviour
     [SerializeField] private Transform groundCheck;
     [SerializeField] private LayerMask groundLayer;
     [SerializeField] private TrailRenderer tr;
+    #endregion
 
+    #region Private Variables
     private bool isFacingRight = true;
     private float horizontal;
 
@@ -36,24 +40,39 @@ public class PlayerMovement : MonoBehaviour
     private float lastGroundedTime;
     private float lastJumpTime;
     private bool isJumping = false;
+    private bool isJumpFalling = false;
+    #endregion
 
     void Start() {
-        lastGroundedTime = 0f;
-        lastJumpTime = 0f;
     }
 
     void Update() {
-        lastGroundedTime += Time.deltaTime;
-        lastJumpTime += Time.deltaTime;
+        #region Timers
+        lastGroundedTime -= Time.deltaTime;
+        lastJumpTime -= Time.deltaTime;
+        #endregion
 
-        if (IsGrounded()) {
-            lastGroundedTime = 0f;
+        #region Collision Checks
+        if (IsGrounded() && !isJumping) {
+            lastGroundedTime = coyoteTime;
         }
+        #endregion
 
+        #region Jump Checks
         if (isJumping && rb.velocity.y < 0f) {
             isJumping = false;
+            isJumpFalling = true;
         }
 
+        // Jump
+        if (CanJump()) {
+            isJumping = true;
+            isJumpFalling = false;
+            Jump();
+        }
+        #endregion
+
+        #region Dashing
         if (isDashing) {
             return;
         }
@@ -61,6 +80,7 @@ public class PlayerMovement : MonoBehaviour
         if (Input.GetKeyDown(KeyCode.LeftShift) && canDash) {
             StartCoroutine(Dash());
         }
+        #endregion
 
         Flip();
     }
@@ -95,20 +115,30 @@ public class PlayerMovement : MonoBehaviour
     }
 
     // Ref: https://www.youtube.com/watch?v=24-BkpFSZuI&list=LL&index=1
-    public void Move(InputAction.CallbackContext context) {
+    public void OnMove(InputAction.CallbackContext context) {
         horizontal = context.ReadValue<Vector2>().x;
     }
 
-    public void Jump(InputAction.CallbackContext context) {
-        if (context.performed && lastGroundedTime < coyoteTime && lastJumpTime < coyoteTime && !isJumping) {
-            rb.velocity = new Vector2(rb.velocity.x, jumpingPower);
-            lastJumpTime = 0f;
-            isJumping = true;
+    public void OnJump(InputAction.CallbackContext context) {
+        if (context.performed) {
+            lastJumpTime = jumpBufferTime;
         }
 
         if (context.canceled && rb.velocity.y > 0f) {
-            rb.velocity = new Vector2(rb.velocity.x, rb.velocity.y * 0.5f);
+            // rb.velocity = new Vector2(rb.velocity.x, rb.velocity.y * 0.5f);
         }
+    }
+
+    private void Jump() {
+        lastJumpTime = 0f;
+        lastGroundedTime = 0f;
+
+        float force = jumpingPower;
+        if (rb.velocity.y < 0f) {
+            force -= rb.velocity.y;
+        }
+
+        rb.AddForce(Vector2.up * force, ForceMode2D.Impulse);
     }
 
     private void Flip() {
@@ -125,7 +155,7 @@ public class PlayerMovement : MonoBehaviour
     }
 
     private bool CanJump() {
-        return lastGroundedTime < coyoteTime && !isJumping;
+        return lastGroundedTime > 0f && lastJumpTime > 0f && !isJumping;
     }
 
     private bool ShouldStop() {
