@@ -14,6 +14,7 @@ public class PlayerMovement : MonoBehaviour
 
     [Header("Jump")]
     [SerializeField] private float jumpingPower;
+    [SerializeField] private float coyoteTime;
 
     [Header("Dash")]
     [SerializeField] private float dashingPower;
@@ -32,7 +33,27 @@ public class PlayerMovement : MonoBehaviour
     private bool canDash = true;
     private bool isDashing;
 
+    private float lastGroundedTime;
+    private float lastJumpTime;
+    private bool isJumping = false;
+
+    void Start() {
+        lastGroundedTime = 0f;
+        lastJumpTime = 0f;
+    }
+
     void Update() {
+        lastGroundedTime += Time.deltaTime;
+        lastJumpTime += Time.deltaTime;
+
+        if (IsGrounded()) {
+            lastGroundedTime = 0f;
+        }
+
+        if (isJumping && rb.velocity.y < 0f) {
+            isJumping = false;
+        }
+
         if (isDashing) {
             return;
         }
@@ -65,21 +86,24 @@ public class PlayerMovement : MonoBehaviour
 
     // Ref: https://www.youtube.com/watch?v=KbtcEVCM7bw&list=LL&index=2
     private void AddFriction() {
-        if (isGrounded() && shouldStop()) {
+        if (IsGrounded() && ShouldStop()) {
             float amount = Mathf.Min(Mathf.Abs(rb.velocity.x), Mathf.Abs(frictionAmount));
             amount *= Mathf.Sign(rb.velocity.x);
-            
+
             rb.AddForce(Vector2.right * -amount, ForceMode2D.Impulse);
         }
     }
 
+    // Ref: https://www.youtube.com/watch?v=24-BkpFSZuI&list=LL&index=1
     public void Move(InputAction.CallbackContext context) {
         horizontal = context.ReadValue<Vector2>().x;
     }
 
     public void Jump(InputAction.CallbackContext context) {
-        if (context.performed && isGrounded()) {
+        if (context.performed && lastGroundedTime < coyoteTime && lastJumpTime < coyoteTime && !isJumping) {
             rb.velocity = new Vector2(rb.velocity.x, jumpingPower);
+            lastJumpTime = 0f;
+            isJumping = true;
         }
 
         if (context.canceled && rb.velocity.y > 0f) {
@@ -96,11 +120,15 @@ public class PlayerMovement : MonoBehaviour
         }
     }
 
-    private bool isGrounded() {
+    private bool IsGrounded() {
         return Physics2D.OverlapCircle(groundCheck.position, 0.2f, groundLayer);
     }
 
-    private bool shouldStop() {
+    private bool CanJump() {
+        return lastGroundedTime < coyoteTime && !isJumping;
+    }
+
+    private bool ShouldStop() {
         return Mathf.Abs(horizontal) < 0.01f;
     }
 

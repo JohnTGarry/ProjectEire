@@ -280,6 +280,7 @@ MonoBehaviour:
   velPower: 2
   frictionAmount: 1
   jumpingPower: 22
+  coyoteTime: 2
   dashingPower: 25
   dashingTime: 0.5
   dashingCooldown: 1
