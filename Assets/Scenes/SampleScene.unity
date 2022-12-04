@@ -275,16 +275,20 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   moveSpeed: 10
+  acceleration: 2
+  deceleration: 1
+  velPower: 2
+  frictionAmount: 1
   jumpingPower: 22
+  dashingPower: 25
+  dashingTime: 0.5
+  dashingCooldown: 1
   rb: {fileID: 272003067}
   groundCheck: {fileID: 908468470}
   groundLayer:
     serializedVersion: 2
     m_Bits: 64
   tr: {fileID: 272003069}
-  dashingPower: 25
-  dashingTime: 0.5
-  dashingCooldown: 1
 --- !u!96 &272003069
 TrailRenderer:
   serializedVersion: 2
