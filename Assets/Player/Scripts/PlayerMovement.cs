@@ -17,6 +17,15 @@ public class PlayerMovement : MonoBehaviour
     [SerializeField] private float jumpingPower;
     [SerializeField] private float coyoteTime;
     [SerializeField] private float jumpBufferTime;
+    [SerializeField] private float jumpHangTimeThreshold;
+    [SerializeField] private float jumpHangTimeMultiplier;
+
+    [Header("Gravity")]
+    [SerializeField] private float fallGravityMultiplier;
+    [SerializeField] private float fastFallGravityMultiplier;
+    [SerializeField] private float jumpCutGravityMultiplier;
+    [SerializeField] private float maxFallSpeed;
+    [SerializeField] private float maxFastFallSpeed;
 
     [Header("Dash")]
     [SerializeField] private float dashingPower;
@@ -33,6 +42,7 @@ public class PlayerMovement : MonoBehaviour
     #region Private Variables
     private bool isFacingRight = true;
     private float horizontal;
+    private float vertical;
 
     private bool canDash = true;
     private bool isDashing;
@@ -41,72 +51,131 @@ public class PlayerMovement : MonoBehaviour
     private float lastJumpTime;
     private bool isJumping = false;
     private bool isJumpFalling = false;
+    private bool isJumpCut = false;
+
+    private float defaultGravityScale;
     #endregion
 
-    void Start() {
+    void Start()
+    {
+        defaultGravityScale = rb.gravityScale;
     }
 
-    void Update() {
+    void Update()
+    {
         #region Timers
         lastGroundedTime -= Time.deltaTime;
         lastJumpTime -= Time.deltaTime;
         #endregion
 
         #region Collision Checks
-        if (IsGrounded() && !isJumping) {
+        if (IsGrounded() && !isJumping)
+        {
             lastGroundedTime = coyoteTime;
         }
         #endregion
 
         #region Jump Checks
-        if (isJumping && rb.velocity.y < 0f) {
+        if (isJumping && rb.velocity.y < -0.01f)
+        {
             isJumping = false;
             isJumpFalling = true;
         }
 
+        if (CanJump())
+        {
+            isJumpCut = false;
+
+            if (!isJumping)
+            {
+                isJumpFalling = false;
+            }
+        }
+
         // Jump
-        if (CanJump()) {
+        if (CanJump() && lastJumpTime > 0.01f)
+        {
             isJumping = true;
+            isJumpCut = false;
             isJumpFalling = false;
             Jump();
         }
         #endregion
 
         #region Dashing
-        if (isDashing) {
+        if (isDashing)
+        {
             return;
         }
 
-        if (Input.GetKeyDown(KeyCode.LeftShift) && canDash) {
+        if (Input.GetKeyDown(KeyCode.LeftShift) && canDash)
+        {
             StartCoroutine(Dash());
         }
+        #endregion
+
+        #region Gravity
+        if (rb.velocity.y < -0.01f && vertical < -0.01f)
+        {
+            // Higher gravity if holding down
+            rb.gravityScale = defaultGravityScale * fastFallGravityMultiplier;
+            // Caps max fall speed, so when falling over large distances we don't accelerate to insanely high speeds
+            rb.velocity = new Vector2(rb.velocity.x, Mathf.Max(rb.velocity.y, maxFastFallSpeed));
+        }
+        else if (isJumpCut)
+        {
+            // Higher gravity if jump button released (TODO: remove this if we want floaty falls)
+            rb.gravityScale = defaultGravityScale * jumpCutGravityMultiplier;
+            rb.velocity = new Vector2(rb.velocity.x, Mathf.Max(rb.velocity.y, -maxFallSpeed));
+        }
+        else if ((isJumping || isJumpFalling) && Mathf.Abs(rb.velocity.y) < jumpHangTimeThreshold)
+        {
+            rb.gravityScale = defaultGravityScale * jumpHangTimeMultiplier;
+        }
+        else if (rb.velocity.y < -0.01f)
+		{
+			// Higher gravity if falling
+			rb.gravityScale = defaultGravityScale * fallGravityMultiplier;
+			// Caps maximum fall speed, so when falling over large distances we don't accelerate to insanely high speeds
+			rb.velocity = new Vector2(rb.velocity.x, Mathf.Max(rb.velocity.y, -maxFallSpeed));
+		}
+		else
+		{
+			//Default gravity if standing on a platform or moving upwards
+			rb.gravityScale = defaultGravityScale;
+		}
         #endregion
 
         Flip();
     }
 
-    private void FixedUpdate() {
-        if (isDashing) {
+    private void FixedUpdate()
+    {
+        if (isDashing)
+        {
             return;
         }
-        
+
         MovePlayer();
         AddFriction();
     }
 
     // Ref: https://www.youtube.com/watch?v=KbtcEVCM7bw&list=LL&index=2
-    private void MovePlayer() {
+    private void MovePlayer()
+    {
         float targetSpeed = horizontal * moveSpeed;
         float speedDiff = targetSpeed - rb.velocity.x;
-        float accelRate = (Math.Abs(targetSpeed) > 0.01f) ? acceleration : deceleration;
+        float accelRate = (Math.Abs(targetSpeed) > 0f) ? acceleration : deceleration;
         float movement = Mathf.Pow(Mathf.Abs(speedDiff) * accelRate, velPower) * Mathf.Sign(speedDiff);
-        
+
         rb.AddForce(movement * Vector2.right);
     }
 
     // Ref: https://www.youtube.com/watch?v=KbtcEVCM7bw&list=LL&index=2
-    private void AddFriction() {
-        if (IsGrounded() && ShouldStop()) {
+    private void AddFriction()
+    {
+        if (IsGrounded() && ShouldStop())
+        {
             float amount = Mathf.Min(Mathf.Abs(rb.velocity.x), Mathf.Abs(frictionAmount));
             amount *= Mathf.Sign(rb.velocity.x);
 
@@ -115,34 +184,46 @@ public class PlayerMovement : MonoBehaviour
     }
 
     // Ref: https://www.youtube.com/watch?v=24-BkpFSZuI&list=LL&index=1
-    public void OnMove(InputAction.CallbackContext context) {
+    public void OnMove(InputAction.CallbackContext context)
+    {
         horizontal = context.ReadValue<Vector2>().x;
+        vertical = context.ReadValue<Vector2>().y;
     }
 
-    public void OnJump(InputAction.CallbackContext context) {
-        if (context.performed) {
+    public void OnJump(InputAction.CallbackContext context)
+    {
+        if (context.performed)
+        {
             lastJumpTime = jumpBufferTime;
         }
 
-        if (context.canceled && rb.velocity.y > 0f) {
-            // rb.velocity = new Vector2(rb.velocity.x, rb.velocity.y * 0.5f);
+        if (context.canceled && rb.velocity.y > 0.01f)
+        {
+            if (CanJumpCut())
+            {
+                isJumpCut = true;
+            }
         }
     }
 
-    private void Jump() {
+    private void Jump()
+    {
         lastJumpTime = 0f;
         lastGroundedTime = 0f;
 
         float force = jumpingPower;
-        if (rb.velocity.y < 0f) {
+        if (rb.velocity.y < -0.01f)
+        {
             force -= rb.velocity.y;
         }
 
         rb.AddForce(Vector2.up * force, ForceMode2D.Impulse);
     }
 
-    private void Flip() {
-        if (isFacingRight && horizontal < 0f || !isFacingRight && horizontal > 0f) {
+    private void Flip()
+    {
+        if (isFacingRight && horizontal < -0.01f || !isFacingRight && horizontal > 0.01f)
+        {
             isFacingRight = !isFacingRight;
             Vector3 localScale = transform.localScale;
             localScale.x *= -1f;
@@ -150,19 +231,28 @@ public class PlayerMovement : MonoBehaviour
         }
     }
 
-    private bool IsGrounded() {
+    private bool IsGrounded()
+    {
         return Physics2D.OverlapCircle(groundCheck.position, 0.2f, groundLayer);
     }
 
-    private bool CanJump() {
-        return lastGroundedTime > 0f && lastJumpTime > 0f && !isJumping;
+    private bool CanJump()
+    {
+        return lastGroundedTime > 0f && !isJumping;
     }
 
-    private bool ShouldStop() {
+    private bool CanJumpCut()
+    {
+        return isJumping && rb.velocity.y > 0.01f;
+    }
+
+    private bool ShouldStop()
+    {
         return Mathf.Abs(horizontal) < 0.01f;
     }
 
-    private IEnumerator Dash() {
+    private IEnumerator Dash()
+    {
         canDash = false;
         isDashing = true;
         float originalGravity = rb.gravityScale;
