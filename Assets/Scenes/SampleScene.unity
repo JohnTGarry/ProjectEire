@@ -880,30 +880,6 @@ PrefabInstance:
   m_Modification:
     m_TransformParent: {fileID: 0}
     m_Modifications:
-    - target: {fileID: 2180279758526670527, guid: 738fd238f4ae0744bacb02d242950e4f, type: 3}
-      propertyPath: m_LocalScale.x
-      value: 1
-      objectReference: {fileID: 0}
-    - target: {fileID: 2180279758526670527, guid: 738fd238f4ae0744bacb02d242950e4f, type: 3}
-      propertyPath: m_LocalScale.y
-      value: 1
-      objectReference: {fileID: 0}
-    - target: {fileID: 2180279758526670527, guid: 738fd238f4ae0744bacb02d242950e4f, type: 3}
-      propertyPath: m_LocalPosition.y
-      value: 0
-      objectReference: {fileID: 0}
-    - target: {fileID: 2180279758526670527, guid: 738fd238f4ae0744bacb02d242950e4f, type: 3}
-      propertyPath: m_LocalPosition.z
-      value: -1
-      objectReference: {fileID: 0}
-    - target: {fileID: 2180279758614901187, guid: 738fd238f4ae0744bacb02d242950e4f, type: 3}
-      propertyPath: jumpingPower
-      value: 8
-      objectReference: {fileID: 0}
-    - target: {fileID: 2180279758614901187, guid: 738fd238f4ae0744bacb02d242950e4f, type: 3}
-      propertyPath: jumpBufferTime
-      value: 0.05
-      objectReference: {fileID: 0}
     - target: {fileID: 2180279758614901189, guid: 738fd238f4ae0744bacb02d242950e4f, type: 3}
       propertyPath: m_RootOrder
       value: 1
