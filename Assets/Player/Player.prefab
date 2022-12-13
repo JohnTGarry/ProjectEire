@@ -154,14 +154,14 @@ MonoBehaviour:
   deceleration: 3
   velPower: 1
   frictionAmount: 0.2
-  jumpingPower: 12
+  jumpingPower: 8
   coyoteTime: 0.15
-  jumpBufferTime: 0.1
+  jumpBufferTime: 0.05
   jumpHangTimeThreshold: 0.5
   jumpHangTimeMultiplier: 1.5
   fallGravityMultiplier: 1.9
   fastFallGravityMultiplier: 1.5
-  jumpCutGravityMultiplier: 0.1
+  jumpCutGravityMultiplier: 2
   maxFallSpeed: 30
   maxFastFallSpeed: 40
   dashingPower: 10

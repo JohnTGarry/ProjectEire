@@ -120,20 +120,24 @@ public class PlayerMovement : MonoBehaviour
             // Higher gravity if holding down
             rb.gravityScale = defaultGravityScale * fastFallGravityMultiplier;
             // Caps max fall speed, so when falling over large distances we don't accelerate to insanely high speeds
-            rb.velocity = new Vector2(rb.velocity.x, Mathf.Max(rb.velocity.y, maxFastFallSpeed));
+            rb.velocity = new Vector2(rb.velocity.x, Mathf.Max(rb.velocity.y, -maxFastFallSpeed));
+            print("Test 1");
         }
         else if (isJumpCut)
         {
+            print("Test 2");
             // Higher gravity if jump button released (TODO: remove this if we want floaty falls)
             rb.gravityScale = defaultGravityScale * jumpCutGravityMultiplier;
             rb.velocity = new Vector2(rb.velocity.x, Mathf.Max(rb.velocity.y, -maxFallSpeed));
         }
         else if ((isJumping || isJumpFalling) && Mathf.Abs(rb.velocity.y) < jumpHangTimeThreshold)
         {
+            print("Test 3");
             rb.gravityScale = defaultGravityScale * jumpHangTimeMultiplier;
         }
         else if (rb.velocity.y < -0.01f)
 		{
+            print("Test 4");
 			// Higher gravity if falling
 			rb.gravityScale = defaultGravityScale * fallGravityMultiplier;
 			// Caps maximum fall speed, so when falling over large distances we don't accelerate to insanely high speeds
@@ -141,6 +145,7 @@ public class PlayerMovement : MonoBehaviour
 		}
 		else
 		{
+            print("Test 5");
 			//Default gravity if standing on a platform or moving upwards
 			rb.gravityScale = defaultGravityScale;
 		}
