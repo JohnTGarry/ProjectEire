@@ -99,6 +99,7 @@ GameObject:
   - component: {fileID: 2180279758614901187}
   - component: {fileID: 2180279758614901185}
   - component: {fileID: 2180279758614901186}
+  - component: {fileID: 2180279758879809089}
   m_Layer: 0
   m_Name: Player
   m_TagString: Untagged
@@ -114,8 +115,8 @@ Transform:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 2180279758614901192}
   m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
-  m_LocalPosition: {x: -1.85, y: 1.02, z: 0}
-  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_LocalPosition: {x: 0.29, y: 0.15, z: 0}
+  m_LocalScale: {x: 0.1, y: 0.1, z: 1}
   m_ConstrainProportionsScale: 0
   m_Children:
   - {fileID: 2180279758526670527}
@@ -164,7 +165,7 @@ SpriteRenderer:
   m_SortingLayerID: 0
   m_SortingLayer: 0
   m_SortingOrder: 1
-  m_Sprite: {fileID: 21300000, guid: 522d916af9f7944fc9739fa8abcde570, type: 3}
+  m_Sprite: {fileID: 21300000, guid: 81c7434803a103645aa43e5a2d982430, type: 3}
   m_Color: {r: 1, g: 1, b: 1, a: 1}
   m_FlipX: 0
   m_FlipY: 0
@@ -188,18 +189,18 @@ BoxCollider2D:
   m_IsTrigger: 0
   m_UsedByEffector: 0
   m_UsedByComposite: 0
-  m_Offset: {x: -0.027365923, y: -0.016840696}
+  m_Offset: {x: 0.23838145, y: -0.36374235}
   m_SpriteTilingProperty:
     border: {x: 0, y: 0, z: 0, w: 0}
     pivot: {x: 0.5, y: 0.5}
-    oldSize: {x: 0.37, y: 0.32}
+    oldSize: {x: 3, y: 3}
     newSize: {x: 1, y: 1}
     adaptiveTilingThreshold: 0.5
     drawMode: 0
     adaptiveTiling: 0
   m_AutoTiling: 0
   serializedVersion: 2
-  m_Size: {x: 0.18423891, y: 0.25901413}
+  m_Size: {x: 1.0977184, y: 1.86797}
   m_EdgeRadius: 0
 --- !u!50 &2180279758614901188
 Rigidbody2D:
@@ -234,19 +235,19 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 917013e8aea1290488ede6e5c5f0f168, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  moveSpeed: 5
-  acceleration: 1
-  deceleration: 1
-  velPower: 2
-  frictionAmount: 1
-  jumpingPower: 8
-  coyoteTime: 0.5
+  moveSpeed: 3
+  acceleration: 3
+  deceleration: 3
+  velPower: 1
+  frictionAmount: 0.2
+  jumpingPower: 12
+  coyoteTime: 0.15
   jumpBufferTime: 0.1
-  jumpHangTimeThreshold: 1
-  jumpHangTimeMultiplier: 2
-  fallGravityMultiplier: 2
-  fastFallGravityMultiplier: 2
-  jumpCutGravityMultiplier: 2
+  jumpHangTimeThreshold: 0.5
+  jumpHangTimeMultiplier: 1.5
+  fallGravityMultiplier: 1.9
+  fastFallGravityMultiplier: 1.5
+  jumpCutGravityMultiplier: 0.1
   maxFallSpeed: 30
   maxFastFallSpeed: 40
   dashingPower: 10
@@ -476,6 +477,22 @@ TrailRenderer:
   m_MinVertexDistance: 0.1
   m_Autodestruct: 0
   m_Emitting: 0
+--- !u!58 &2180279758879809089
+CircleCollider2D:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 2180279758614901192}
+  m_Enabled: 1
+  m_Density: 1
+  m_Material: {fileID: 0}
+  m_IsTrigger: 0
+  m_UsedByEffector: 0
+  m_UsedByComposite: 0
+  m_Offset: {x: 0, y: 0}
+  serializedVersion: 2
+  m_Radius: 0.185
 --- !u!1 &2180279759184297674
 GameObject:
   m_ObjectHideFlags: 0
