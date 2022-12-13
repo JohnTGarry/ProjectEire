@@ -77,12 +77,12 @@ public class PlayerMovement : MonoBehaviour
     void Start()
     {
         SetInitialGravityScale(rb.gravityScale);
+        SetMoveInputs();
     }
 
     void Update()
     {
         UpdateTimers();
-        SetMoveInputs();
         SetJumpChecks();
         SetDashingChecks();
         SetGravityChecks();
@@ -241,6 +241,8 @@ public class PlayerMovement : MonoBehaviour
     {
         _horizontalInput = context.ReadValue<Vector2>().x;
         _verticalInput = context.ReadValue<Vector2>().y;
+
+        SetMoveInputs();
     }
 
     public void OnJump(InputAction.CallbackContext context)
