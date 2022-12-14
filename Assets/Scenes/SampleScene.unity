@@ -456,6 +456,38 @@ BoxCollider2D:
   serializedVersion: 2
   m_Size: {x: 1, y: 1}
   m_EdgeRadius: 0
+--- !u!1 &1322040122 stripped
+GameObject:
+  m_CorrespondingSourceObject: {fileID: 2180279758614901192, guid: 738fd238f4ae0744bacb02d242950e4f, type: 3}
+  m_PrefabInstance: {fileID: 2180279758879809087}
+  m_PrefabAsset: {fileID: 0}
+--- !u!114 &1322040139
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1322040122}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: f13490d7a6f46b14683a2ca0b0b7aa72, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  moveSpeed: 0
+  acceleration: 0
+  deceleration: 0
+  velPower: 0
+  frictionAmount: 0
+  jumpingPower: 0
+  coyoteTime: 0
+  jumpBufferTime: 0
+  jumpHangTimeThreshold: 0
+  jumpHangTimeMultiplier: 0
+  fallGravityMultiplier: 0
+  fastFallGravityMultiplier: 0
+  jumpCutGravityMultiplier: 0
+  maxFallSpeed: 0
+  maxFastFallSpeed: 0
 --- !u!1 &1935656695
 GameObject:
   m_ObjectHideFlags: 0

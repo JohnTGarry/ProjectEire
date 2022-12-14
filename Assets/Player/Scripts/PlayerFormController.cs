@@ -1,16 +1,16 @@
 using System.Collections.Generic;
 using UnityEngine;
 
-public class PlayerSpriteController : MonoBehaviour
+public class PlayerFormController : MonoBehaviour
 {
     [SerializeField] private Sprite _humanSprite;
     [SerializeField] private Sprite _foxSprite;
     [SerializeField] private SpriteRenderer _spriteRenderer;
 
     private BoxCollider2D[] _colliderList;
-    private AnimalForm _playerForm;
+    public AnimalForm _playerForm { get; private set; }
 
-    private enum AnimalForm
+    public enum AnimalForm
     {
         HUMAN,
         FOX

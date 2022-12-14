@@ -15,8 +15,10 @@ GameObject:
   - component: {fileID: 2180279758614901187}
   - component: {fileID: 2180279758614901185}
   - component: {fileID: 2180279758614901186}
-  - component: {fileID: 2180279758879809089}
   - component: {fileID: 2180279758879809097}
+  - component: {fileID: 1322040123}
+  - component: {fileID: 1552937200040251008}
+  - component: {fileID: 4814444964727174357}
   m_Layer: 0
   m_Name: Player
   m_TagString: Untagged
@@ -151,30 +153,18 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 917013e8aea1290488ede6e5c5f0f168, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  moveSpeed: 3
-  acceleration: 3
-  deceleration: 3
-  velPower: 1
-  frictionAmount: 0.2
-  jumpingPower: 8
-  coyoteTime: 0.15
-  jumpBufferTime: 0.05
-  jumpHangTimeThreshold: 0.5
-  jumpHangTimeMultiplier: 1.5
-  fallGravityMultiplier: 1.9
-  fastFallGravityMultiplier: 1.5
-  jumpCutGravityMultiplier: 2
-  maxFallSpeed: 30
-  maxFastFallSpeed: 40
-  dashingPower: 10
-  dashingTime: 0.5
-  dashingCooldown: 1
+  dashingPower: 0
+  dashingTime: 0
+  dashingCooldown: 0
   rb: {fileID: 2180279758614901188}
   groundCheck: {fileID: 2180279759184297673}
   groundLayer:
     serializedVersion: 2
     m_Bits: 64
   tr: {fileID: 2180279758614901186}
+  playerFormController: {fileID: 1322040123}
+  humanMovement: {fileID: 1552937200040251008}
+  foxMovement: {fileID: 4814444964727174357}
 --- !u!114 &2180279758614901185
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -393,21 +383,6 @@ TrailRenderer:
   m_MinVertexDistance: 0.1
   m_Autodestruct: 0
   m_Emitting: 0
---- !u!114 &2180279758879809089
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 2180279758614901192}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 594a458cad6aa234e82135b70c39c895, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: 
-  _humanSprite: {fileID: 21300000, guid: 81c7434803a103645aa43e5a2d982430, type: 3}
-  _foxSprite: {fileID: 21300000, guid: 2956913cf26eb5d49aef53039ee7eb77, type: 3}
-  _spriteRenderer: {fileID: 2180279758614901190}
 --- !u!61 &2180279758879809097
 BoxCollider2D:
   m_ObjectHideFlags: 0
@@ -434,6 +409,75 @@ BoxCollider2D:
   serializedVersion: 2
   m_Size: {x: 0.9585837, y: 0.43141484}
   m_EdgeRadius: 0
+--- !u!114 &1322040123
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 2180279758614901192}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: a0846b06a71413f4c8abba3e2b4d4cae, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  _humanSprite: {fileID: 21300000, guid: 81c7434803a103645aa43e5a2d982430, type: 3}
+  _foxSprite: {fileID: 21300000, guid: 2956913cf26eb5d49aef53039ee7eb77, type: 3}
+  _spriteRenderer: {fileID: 2180279758614901190}
+--- !u!114 &1552937200040251008
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 2180279758614901192}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 3801448bff92f7e4199600b3be708b83, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  moveSpeed: 3
+  acceleration: 3
+  deceleration: 3
+  velPower: 1
+  frictionAmount: 0.2
+  jumpingPower: 8
+  coyoteTime: 0.15
+  jumpBufferTime: 0.05
+  jumpHangTimeThreshold: 0.5
+  jumpHangTimeMultiplier: 1.5
+  fallGravityMultiplier: 1.8
+  fastFallGravityMultiplier: 1.2
+  jumpCutGravityMultiplier: 2
+  maxFallSpeed: 30
+  maxFastFallSpeed: 40
+--- !u!114 &4814444964727174357
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 2180279758614901192}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: f13490d7a6f46b14683a2ca0b0b7aa72, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  moveSpeed: 10
+  acceleration: 4
+  deceleration: 4
+  velPower: 1
+  frictionAmount: 0.2
+  jumpingPower: 12
+  coyoteTime: 0.15
+  jumpBufferTime: 0.05
+  jumpHangTimeThreshold: 0.5
+  jumpHangTimeMultiplier: 1.5
+  fallGravityMultiplier: 1.7
+  fastFallGravityMultiplier: 1.2
+  jumpCutGravityMultiplier: 2
+  maxFallSpeed: 30
+  maxFastFallSpeed: 40
 --- !u!1 &2180279759184297674
 GameObject:
   m_ObjectHideFlags: 0

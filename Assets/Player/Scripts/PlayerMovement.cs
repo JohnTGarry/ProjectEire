@@ -6,27 +6,6 @@ using UnityEngine.InputSystem;
 public class PlayerMovement : MonoBehaviour
 {
     #region Serialize Fields
-    [Header("Run")]
-    [SerializeField] private float moveSpeed;
-    [SerializeField] private float acceleration;
-    [SerializeField] private float deceleration;
-    [SerializeField] private float velPower;
-    [SerializeField] private float frictionAmount;
-
-    [Header("Jump")]
-    [SerializeField] private float jumpingPower;
-    [SerializeField] private float coyoteTime;
-    [SerializeField] private float jumpBufferTime;
-    [SerializeField] private float jumpHangTimeThreshold;
-    [SerializeField] private float jumpHangTimeMultiplier;
-
-    [Header("Gravity")]
-    [SerializeField] private float fallGravityMultiplier;
-    [SerializeField] private float fastFallGravityMultiplier;
-    [SerializeField] private float jumpCutGravityMultiplier;
-    [SerializeField] private float maxFallSpeed;
-    [SerializeField] private float maxFastFallSpeed;
-
     [Header("Dash")]
     [SerializeField] private float dashingPower;
     [SerializeField] private float dashingTime;
@@ -37,9 +16,36 @@ public class PlayerMovement : MonoBehaviour
     [SerializeField] private Transform groundCheck;
     [SerializeField] private LayerMask groundLayer;
     [SerializeField] private TrailRenderer tr;
+    [SerializeField] private PlayerFormController playerFormController;
+    [SerializeField] private HumanMovement humanMovement;
+    [SerializeField] private FoxMovement foxMovement;
     #endregion
 
     #region Private Variables
+    // Form (Human/Fox/etc)
+    private FormMovement _formMovement;
+
+    // Run
+    private float moveSpeed;
+    private float acceleration;
+    private float deceleration;
+    private float velPower;
+    private float frictionAmount;
+
+    // Jump
+    private float jumpingPower;
+    private float coyoteTime;
+    private float jumpBufferTime;
+    private float jumpHangTimeThreshold;
+    private float jumpHangTimeMultiplier;
+
+    // Gravity
+    private float fallGravityMultiplier;
+    private float fastFallGravityMultiplier;
+    private float jumpCutGravityMultiplier;
+    private float maxFallSpeed;
+    private float maxFastFallSpeed;
+
     private bool isFacingRight = true;
     private float _horizontalInput;
     private float _verticalInput;
@@ -76,12 +82,14 @@ public class PlayerMovement : MonoBehaviour
 
     void Start()
     {
+        ChangeForm();
         SetInitialGravityScale(rb.gravityScale);
         SetMoveInputs();
     }
 
     void Update()
     {
+        ChangeForm(); // TODO: Call this only when we switch forms, not every update
         UpdateTimers();
         SetJumpChecks();
         SetDashingChecks();
@@ -100,6 +108,49 @@ public class PlayerMovement : MonoBehaviour
         AddFriction();
     }
 
+    private void ChangeForm()
+    {
+        SetFormMovement();
+        SetMovementConstants();
+    }
+
+    private void SetFormMovement()
+    {
+        switch (playerFormController._playerForm)
+        {
+            case PlayerFormController.AnimalForm.HUMAN:
+                _formMovement = humanMovement;
+                return;
+            case PlayerFormController.AnimalForm.FOX:
+                _formMovement = foxMovement;
+                return;
+            default:
+                _formMovement = humanMovement;
+                return;
+        }
+    }
+
+    private void SetMovementConstants()
+    {        
+        moveSpeed = _formMovement.moveSpeed;
+        acceleration = _formMovement.acceleration;
+        deceleration = _formMovement.deceleration;
+        velPower = _formMovement.velPower;
+        frictionAmount = _formMovement.frictionAmount;
+
+        jumpingPower = _formMovement.jumpingPower;
+        coyoteTime = _formMovement.coyoteTime;
+        jumpBufferTime = _formMovement.jumpBufferTime;
+        jumpHangTimeThreshold = _formMovement.jumpHangTimeThreshold;
+        jumpHangTimeMultiplier = _formMovement.jumpHangTimeMultiplier;
+
+        fallGravityMultiplier = _formMovement.fallGravityMultiplier;
+        fastFallGravityMultiplier = _formMovement.fastFallGravityMultiplier;
+        jumpCutGravityMultiplier = _formMovement.jumpCutGravityMultiplier;
+        maxFallSpeed = _formMovement.maxFallSpeed;
+        maxFastFallSpeed = _formMovement.maxFastFallSpeed;
+    }
+    
     private void SetInitialGravityScale(float gravityScale)
     {
         _defaultGravityScale = gravityScale;
