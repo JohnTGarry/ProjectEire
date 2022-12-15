@@ -4,10 +4,15 @@ public class FormMovement : MonoBehaviour
 {
     [Header("Run")]
     public float moveSpeed;
-    public float acceleration;
-    public float deceleration;
+    public float runAccel;
+    public float runDecel;
     public float velPower;
     public float frictionAmount;
+
+    [Header("Wall Jump")]
+    public float wallJumpRunLerp;
+    public float accelInAir;
+    public float decelInAir;
 
     [Header("Jump")]
     public float jumpingPower;
@@ -15,6 +20,8 @@ public class FormMovement : MonoBehaviour
     public float jumpBufferTime;
     public float jumpHangTimeThreshold;
     public float jumpHangTimeMultiplier;
+    public float jumpHangAccelMult;
+    public float jumpHangMaxSpeedMult;
 
     [Header("Gravity")]
     public float fallGravityMultiplier;

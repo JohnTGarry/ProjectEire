@@ -1,10 +1,11 @@
-using System;
 using System.Collections;
 using UnityEngine;
 using UnityEngine.InputSystem;
 
 public class PlayerMovement : MonoBehaviour
 {
+    public PlayerData Data;
+
     #region Serialize Fields
     [Header("Dash")]
     [SerializeField] private float dashingPower;
@@ -13,6 +14,8 @@ public class PlayerMovement : MonoBehaviour
 
     [Header("References")]
     [SerializeField] private Rigidbody2D rb;
+    [SerializeField] private Transform _frontWallCheckPoint;
+    [SerializeField] private Transform _backWallCheckPoint;
     [SerializeField] private Transform groundCheck;
     [SerializeField] private LayerMask groundLayer;
     [SerializeField] private TrailRenderer tr;
@@ -27,8 +30,8 @@ public class PlayerMovement : MonoBehaviour
 
     // Run
     private float moveSpeed;
-    private float acceleration;
-    private float deceleration;
+    private float runAccel;
+    private float runDecel;
     private float velPower;
     private float frictionAmount;
 
@@ -38,6 +41,20 @@ public class PlayerMovement : MonoBehaviour
     private float jumpBufferTime;
     private float jumpHangTimeThreshold;
     private float jumpHangTimeMultiplier;
+    private float jumpHangAccelMult;
+    private float jumpHangMaxSpeedMult;
+
+    //Wall Jump
+    private bool _isWallJumping;
+    private float _wallJumpStartTime;
+    private float _wallJumpTime;
+    private int _lastWallJumpDir;
+    private float _lastOnWallTime;
+    private float _lastOnWallRightTime;
+    private float _lastOnWallLeftTime;
+    private float _wallJumpRunLerp;
+    private float _accelInAir;
+    private float _decelInAir;
 
     // Gravity
     private float fallGravityMultiplier;
@@ -91,10 +108,12 @@ public class PlayerMovement : MonoBehaviour
     {
         ChangeForm(); // TODO: Call this only when we switch forms, not every update
         UpdateTimers();
+        CheckCollisions();
+        UpdateLastOnWallTime();
         SetJumpChecks();
         SetDashingChecks();
         SetGravityChecks();
-        Flip();
+        Turn();
     }
 
     private void FixedUpdate()
@@ -104,7 +123,11 @@ public class PlayerMovement : MonoBehaviour
             return;
         }
 
-        MovePlayer();
+        if (_isWallJumping)
+            Run(_wallJumpRunLerp);
+        else
+            Run(1f);
+
         AddFriction();
     }
 
@@ -131,18 +154,24 @@ public class PlayerMovement : MonoBehaviour
     }
 
     private void SetMovementConstants()
-    {        
+    {
         moveSpeed = _formMovement.moveSpeed;
-        acceleration = _formMovement.acceleration;
-        deceleration = _formMovement.deceleration;
+        runAccel = _formMovement.runAccel;
+        runDecel = _formMovement.runDecel;
         velPower = _formMovement.velPower;
         frictionAmount = _formMovement.frictionAmount;
+
+        _wallJumpRunLerp = _formMovement.wallJumpRunLerp;
+        _accelInAir = _formMovement.accelInAir;
+        _decelInAir = _formMovement.decelInAir;
 
         jumpingPower = _formMovement.jumpingPower;
         coyoteTime = _formMovement.coyoteTime;
         jumpBufferTime = _formMovement.jumpBufferTime;
         jumpHangTimeThreshold = _formMovement.jumpHangTimeThreshold;
         jumpHangTimeMultiplier = _formMovement.jumpHangTimeMultiplier;
+        jumpHangAccelMult = _formMovement.jumpHangAccelMult;
+        jumpHangMaxSpeedMult = _formMovement.jumpHangMaxSpeedMult;
 
         fallGravityMultiplier = _formMovement.fallGravityMultiplier;
         fastFallGravityMultiplier = _formMovement.fastFallGravityMultiplier;
@@ -150,7 +179,7 @@ public class PlayerMovement : MonoBehaviour
         maxFallSpeed = _formMovement.maxFallSpeed;
         maxFastFallSpeed = _formMovement.maxFastFallSpeed;
     }
-    
+
     private void SetInitialGravityScale(float gravityScale)
     {
         _defaultGravityScale = gravityScale;
@@ -160,11 +189,36 @@ public class PlayerMovement : MonoBehaviour
     {
         lastGroundedTime -= Time.deltaTime;
         lastJumpTime -= Time.deltaTime;
+        _lastOnWallTime -= Time.deltaTime;
+        _lastOnWallLeftTime -= Time.deltaTime;
+        _lastOnWallRightTime -= Time.deltaTime;
+    }
+
+    private void CheckCollisions()
+    {
+        if (isJumping) return;
 
         if (IsGrounded() && !isJumping)
         {
             lastGroundedTime = coyoteTime;
         }
+
+        if (_isWallJumping) return;
+
+        if ((IsRightSideOnWall() && isFacingRight) || (IsLeftSideOnWall() && !isFacingRight))
+        {
+            _lastOnWallRightTime = coyoteTime;
+        }
+
+        if ((IsRightSideOnWall() && !isFacingRight) || (IsLeftSideOnWall() && isFacingRight))
+        {
+            _lastOnWallLeftTime = coyoteTime;
+        }
+    }
+
+    private void UpdateLastOnWallTime()
+    {
+        _lastOnWallTime = Mathf.Max(_lastOnWallLeftTime, _lastOnWallRightTime);
     }
 
     private void SetMoveInputs()
@@ -184,10 +238,19 @@ public class PlayerMovement : MonoBehaviour
         if (isJumping && rb.velocity.y < -ZERO_THRESHOLD)
         {
             isJumping = false;
-            isJumpFalling = true;
+
+            if (!_isWallJumping)
+            {
+                isJumpFalling = true;
+            }
         }
 
-        if (CanJump())
+        if (_isWallJumping && Time.time - _wallJumpStartTime > _wallJumpTime)
+        {
+            _isWallJumping = false;
+        }
+
+        if (CanJump() && !_isWallJumping)
         {
             isJumpCut = false;
 
@@ -201,9 +264,20 @@ public class PlayerMovement : MonoBehaviour
         if (CanJump() && lastJumpTime > ZERO_THRESHOLD)
         {
             isJumping = true;
+            _isWallJumping = false;
             isJumpCut = false;
             isJumpFalling = false;
             Jump();
+        }
+        // Wall Jump
+        else if (CanWallJump() && lastJumpTime > ZERO_THRESHOLD)
+        {
+            _isWallJumping = true;
+            isJumping = false;
+            isJumpCut = false;
+            isJumpFalling = false;
+            _wallJumpStartTime = Time.time;
+            _lastWallJumpDir = (_lastOnWallRightTime > ZERO_THRESHOLD) ? -1 : 1;
         }
     }
 
@@ -235,7 +309,7 @@ public class PlayerMovement : MonoBehaviour
             rb.gravityScale = _defaultGravityScale * jumpCutGravityMultiplier;
             rb.velocity = new Vector2(rb.velocity.x, Mathf.Max(rb.velocity.y, -maxFallSpeed));
         }
-        else if ((isJumping || isJumpFalling) && Mathf.Abs(rb.velocity.y) < jumpHangTimeThreshold)
+        else if ((isJumping || _isWallJumping || isJumpFalling) && Mathf.Abs(rb.velocity.y) < jumpHangTimeThreshold)
         {
             rb.gravityScale = _defaultGravityScale * jumpHangTimeMultiplier;
         }
@@ -253,7 +327,7 @@ public class PlayerMovement : MonoBehaviour
         }
     }
 
-    private void Flip()
+    private void Turn()
     {
         if (isFacingRight && _moveInputX == DirectionX.LEFT || !isFacingRight && _moveInputX == DirectionX.RIGHT)
         {
@@ -265,14 +339,38 @@ public class PlayerMovement : MonoBehaviour
     }
 
     // Ref: https://www.youtube.com/watch?v=KbtcEVCM7bw&list=LL&index=2
-    private void MovePlayer()
+    private void Run(float lerpAmount)
     {
         float targetSpeed = _horizontalInput * moveSpeed;
-        float speedDiff = targetSpeed - rb.velocity.x;
-        float accelRate = (Math.Abs(targetSpeed) > 0f) ? acceleration : deceleration;
-        float movement = Mathf.Pow(Mathf.Abs(speedDiff) * accelRate, velPower) * Mathf.Sign(speedDiff);
+        targetSpeed = Mathf.Lerp(rb.velocity.x, targetSpeed, lerpAmount);
 
-        rb.AddForce(movement * Vector2.right);
+        float accelRate;
+
+        if (lastGroundedTime > ZERO_THRESHOLD)
+            accelRate = (Mathf.Abs(targetSpeed) > ZERO_THRESHOLD) ? runAccel : runDecel;
+        else
+            accelRate = (Mathf.Abs(targetSpeed) > ZERO_THRESHOLD) ? runAccel * _accelInAir : runDecel * _decelInAir;
+
+        //Increase are acceleration and maxSpeed when at the apex of their jump, makes the jump feel a bit more bouncy, responsive and natural
+        if ((isJumping || _isWallJumping || isJumpFalling) && Mathf.Abs(rb.velocity.y) < jumpHangTimeThreshold)
+        {
+            accelRate *= jumpHangTimeMultiplier;
+            targetSpeed *= jumpHangMaxSpeedMult;
+        }
+
+        // Conserve Momentum
+        bool shouldConserveMomentum = true;
+        if (shouldConserveMomentum && IsFasterThanSpeedX(targetSpeed) && IsMovingAndInSameDirectionX(targetSpeed) && lastGroundedTime < -ZERO_THRESHOLD)
+        {
+            // Prevent any deceleration from happening, or in other words conserve are current momentum
+            // You could experiment with allowing for the player to slightly increae their speed whilst in this "state"
+            accelRate = 0;
+        }
+
+        float speedDiff = targetSpeed - rb.velocity.x;
+        float movement = speedDiff * accelRate;
+
+        rb.AddForce(movement * Vector2.right, ForceMode2D.Force);
     }
 
     // Ref: https://www.youtube.com/watch?v=KbtcEVCM7bw&list=LL&index=2
@@ -285,6 +383,16 @@ public class PlayerMovement : MonoBehaviour
 
             rb.AddForce(Vector2.right * -amount, ForceMode2D.Impulse);
         }
+    }
+
+    private bool IsFasterThanSpeedX(float speed)
+    {
+        return Mathf.Abs(rb.velocity.x) > Mathf.Abs(speed);
+    }
+
+    private bool IsMovingAndInSameDirectionX(float speed)
+    {
+        return Mathf.Sign(rb.velocity.x) == Mathf.Sign(speed) && Mathf.Abs(speed) > ZERO_THRESHOLD;
     }
 
     // Ref: https://www.youtube.com/watch?v=24-BkpFSZuI&list=LL&index=1
@@ -326,9 +434,41 @@ public class PlayerMovement : MonoBehaviour
         rb.AddForce(Vector2.up * force, ForceMode2D.Impulse);
     }
 
+    private void WallJump(int direction)
+    {
+        //Ensures we can't call Wall Jump multiple times from one press
+        lastJumpTime = 0;
+        lastGroundedTime = 0;
+        _lastOnWallRightTime = 0;
+        _lastOnWallLeftTime = 0;
+
+        Vector2 force = new Vector2(Data.wallJumpForce.x, Data.wallJumpForce.y);
+        force.x *= direction; //apply force in opposite direction of wall
+
+        if (Mathf.Sign(rb.velocity.x) != Mathf.Sign(force.x))
+            force.x -= rb.velocity.x;
+
+        if (rb.velocity.y < 0) //checks whether player is falling, if so we subtract the velocity.y (counteracting force of gravity). This ensures the player always reaches our desired jump force or greater
+            force.y -= rb.velocity.y;
+
+        //Unlike in the run we want to use the Impulse mode.
+        //The default mode will apply are force instantly ignoring masss
+        rb.AddForce(force, ForceMode2D.Impulse);
+    }
+
     private bool IsGrounded()
     {
         return Physics2D.OverlapCircle(groundCheck.position, 0.2f, groundLayer);
+    }
+
+    private bool IsRightSideOnWall()
+    {
+        return Physics2D.OverlapCircle(_frontWallCheckPoint.position, 0.2f, 0, groundLayer);
+    }
+
+    private bool IsLeftSideOnWall()
+    {
+        return Physics2D.OverlapCircle(_backWallCheckPoint.position, 0.2f, 0, groundLayer);
     }
 
     private bool CanJump()
@@ -336,11 +476,24 @@ public class PlayerMovement : MonoBehaviour
         return lastGroundedTime > 0f && !isJumping;
     }
 
+    private bool CanWallJump()
+    {
+        return lastJumpTime > 0 && _lastOnWallTime > 0 && lastGroundedTime <= 0 &&
+            (!_isWallJumping || 
+                (_lastOnWallRightTime > 0 && _lastWallJumpDir == 1) || 
+                (_lastOnWallLeftTime > 0 && _lastWallJumpDir == -1));
+    }
+
     private bool CanJumpCut()
     {
         return isJumping && rb.velocity.y > ZERO_THRESHOLD;
     }
 
+    private bool CanWallJumpCut()
+    {
+        return _isWallJumping && rb.velocity.y > ZERO_THRESHOLD;
+    }
+    
     private bool ShouldStop()
     {
         return _moveInputX == DirectionX.NONE;
